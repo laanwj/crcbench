@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <nmmintrin.h>
 
-namespace crc32c_arm {
+namespace crc32c_sse42 {
 
 // Return the crc32c of concat(A, data[0,n-1]) where init_crc is the
 // crc32c of some string A.  Extend() is often used to maintain the

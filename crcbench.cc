@@ -1,6 +1,8 @@
 /**
  * ARM:
- * g++ crcbench.cc crc32c.cc -O2 -o crcbench -march=armv8-a+crc -std=c++11 -DBENCH_ARM
+ * g++ crcbench.cc crc32c.cc -O2 -o crcbench -std=c++11 -march=armv8-a+crc -DBENCH_ARM
+ * X86_64:
+ * g++ crcbench.cc crc32c.cc -O2 -o crcbench -std=c++11 -msse4.2 -DBENCH_SSE42
  **/
 #include <stdint.h>
 #include <time.h>
@@ -9,6 +11,9 @@
 #include "crc32c.h"
 #ifdef BENCH_ARM
 #include "crc32c_arm.h"
+#endif
+#ifdef BENCH_SSE42
+#include "crc32c_sse42.h"
 #endif
 
 static const size_t testdata_size = 65536 + 4 + 2 + 1;
@@ -56,7 +61,6 @@ int main()
     uint32_t state_cpu = state;
 
 #ifdef BENCH_ARM
-    /** ARM */
     clock_gettime(CLOCK_MONOTONIC, &tvm_b);
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_b);
     state = 0;
@@ -65,6 +69,21 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &tvm_e);
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_e);
     report("hw-arm", &tvm_b, &tvm_e, &tvc_b, &tvc_e, testdata_size, iterations);
+
+    if (state != state_cpu) {
+        printf("Error: output was %08x instead of reference %08x\n", state, state_cpu);
+    }
+#endif
+
+#ifdef BENCH_SSE42
+    clock_gettime(CLOCK_MONOTONIC, &tvm_b);
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_b);
+    state = 0;
+    for (int i=0; i<iterations; ++i)
+        state = crc32c_sse42::Extend(state, (const char*)testdata, testdata_size);
+    clock_gettime(CLOCK_MONOTONIC, &tvm_e);
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_e);
+    report("hw-sse42", &tvm_b, &tvm_e, &tvc_b, &tvc_e, testdata_size, iterations);
 
     if (state != state_cpu) {
         printf("Error: output was %08x instead of reference %08x\n", state, state_cpu);
