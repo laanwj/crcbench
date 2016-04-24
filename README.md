@@ -1,4 +1,4 @@
-ARM:
+ARM (AARCH64):
 
     g++ crcbench.cc crc32c.cc -O2 -o crcbench -std=c++11 -march=armv8-a+crc -DBENCH_ARM
 
