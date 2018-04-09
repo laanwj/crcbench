@@ -11,6 +11,6 @@ fi
 if [ "$PLATFORM" == "sse42" ]; then
     ARGS="-msse4.2 -DBENCH_SSE42"
 fi
-g++ crcbench.cc crc32c.cc perf.cpp -O2 -o crcbench -std=c++11 ${ARGS}
+g++ crcbench.cc crc32c.cc perf.cpp -O2 -o crcbench -std=c++11 -static ${ARGS}
 
 
