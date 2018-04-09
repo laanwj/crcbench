@@ -1,6 +1,6 @@
 /**
  * ARM:
- * g++ crcbench.cc crc32c.cc perf.cpp -O2 -o crcbench -std=c++11 -march=armv8-a+crc -DBENCH_ARM
+ * g++ crcbench.cc crc32c.cc perf.cpp -O2 -o crcbench -std=c++11 -march=armv8-a+crc -DBENCH_ARM64
  * X86_64:
  * g++ crcbench.cc crc32c.cc perf.cpp -O2 -o crcbench -std=c++11 -msse4.2 -DBENCH_SSE42
  **/
@@ -8,9 +8,12 @@
 #include <time.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+
 #include "crc32c.h"
 #include "perf.h"
-#ifdef BENCH_ARM
+#ifdef BENCH_ARM64
 #include "crc32c_arm.h"
 #endif
 #ifdef BENCH_SSE42
@@ -68,20 +71,23 @@ int main()
     report("sw", &tvm_b, &tvm_e, &tvc_b, &tvc_e, cycles_b, cycles_e, testdata_size, iterations);
     uint32_t state_cpu = state;
 
-#ifdef BENCH_ARM
-    clock_gettime(CLOCK_MONOTONIC, &tvm_b);
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_b);
-    cycles_b = perf_cpucycles();
-    state = 0;
-    for (int i=0; i<iterations; ++i)
-        state = crc32c_arm::Extend(state, (const char*)testdata, testdata_size);
-    cycles_e = perf_cpucycles();
-    clock_gettime(CLOCK_MONOTONIC, &tvm_e);
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_e);
-    report("hw-arm", &tvm_b, &tvm_e, &tvc_b, &tvc_e, cycles_b, cycles_e, testdata_size, iterations);
+    /* ARM32: if (getauxval(AT_HWCAP2) & HWCAP2_CRC32) { */
+#ifdef BENCH_ARM64
+    if (getauxval(AT_HWCAP) & HWCAP_CRC32) {
+        clock_gettime(CLOCK_MONOTONIC, &tvm_b);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_b);
+        cycles_b = perf_cpucycles();
+        state = 0;
+        for (int i=0; i<iterations; ++i)
+            state = crc32c_arm::Extend(state, (const char*)testdata, testdata_size);
+        cycles_e = perf_cpucycles();
+        clock_gettime(CLOCK_MONOTONIC, &tvm_e);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_e);
+        report("hw-arm", &tvm_b, &tvm_e, &tvc_b, &tvc_e, cycles_b, cycles_e, testdata_size, iterations);
 
-    if (state != state_cpu) {
-        printf("Error: output was %08x instead of reference %08x\n", state, state_cpu);
+        if (state != state_cpu) {
+            printf("Error: output was %08x instead of reference %08x\n", state, state_cpu);
+        }
     }
 #endif
 

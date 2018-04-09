@@ -1,10 +1,10 @@
 ARM (AARCH64):
 
-    g++ crcbench.cc crc32c.cc -O2 -o crcbench -std=c++11 -march=armv8-a+crc -DBENCH_ARM
+    ./build_bench.sh arm64
 
 X86_64:
 
-    g++ crcbench.cc crc32c.cc -O2 -o crcbench -std=c++11 -msse4.2 -DBENCH_SSE42
+    ./build_bench.sh sse42
 
 Benchmarks are executed on a single core.
 
