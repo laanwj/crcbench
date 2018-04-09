@@ -13,7 +13,7 @@
 
 #include "crc32c.h"
 #include "perf.h"
-#ifdef BENCH_ARM64
+#ifdef BENCH_ARM
 #include "crc32c_arm.h"
 #endif
 #ifdef BENCH_SSE42
@@ -71,9 +71,12 @@ int main()
     report("sw", &tvm_b, &tvm_e, &tvc_b, &tvc_e, cycles_b, cycles_e, testdata_size, iterations);
     uint32_t state_cpu = state;
 
-    /* ARM32: if (getauxval(AT_HWCAP2) & HWCAP2_CRC32) { */
-#ifdef BENCH_ARM64
+#ifdef BENCH_ARM
+#ifdef __aarch64__
     if (getauxval(AT_HWCAP) & HWCAP_CRC32) {
+#else /* arm32 */
+    if (getauxval(AT_HWCAP2) & HWCAP2_CRC32) {
+#endif
         clock_gettime(CLOCK_MONOTONIC, &tvm_b);
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tvc_b);
         cycles_b = perf_cpucycles();

@@ -1,8 +1,8 @@
-ARM (AARCH64):
+ARM or AARCH64:
 
-    ./build_bench.sh arm64
+    ./build_bench.sh arm
 
-X86_64:
+x86 or X86_64:
 
     ./build_bench.sh sse42
 
