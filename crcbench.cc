@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <sys/auxv.h>
+#ifdef BENCH_ARM
 #include <asm/hwcap.h>
+#endif
 
 #include "crc32c.h"
 #include "perf.h"
